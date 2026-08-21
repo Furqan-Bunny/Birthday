@@ -178,21 +178,33 @@ h3 {
   text-shadow: 0 1px 12px rgba(255, 253, 251, 0.98), 0 0 26px rgba(255, 253, 251, 0.9);
 }
 
+/* The only nudge to keep going. It was set in --pink-soft at 0.62rem, which
+   disappeared completely against the cream ground, so it now matches the
+   weight of the other pink lines and carries the same cream halo. */
 .scroll-hint {
   position: absolute;
-  bottom: 2.5rem;
+  bottom: 1.6rem;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.62rem;
-  letter-spacing: 0.4em;
+  font-family: 'Fredoka', 'Montserrat', sans-serif;
+  font-weight: 500;
+  font-size: clamp(0.82rem, 2.2vw, 0.98rem);
+  letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--pink-soft);
+  color: #c9285c;
+  /* It lands on the pink cake, so a single soft shadow is not enough — these
+     stack into an opaque cream halo that reads over frosting, gold or a balloon. */
+  text-shadow:
+    0 0 6px rgba(255, 253, 251, 1),
+    0 0 12px rgba(255, 253, 251, 1),
+    0 0 22px rgba(255, 253, 251, 0.98),
+    0 0 34px rgba(255, 253, 251, 0.9);
   opacity: 0;
 }
 .hero.go .scroll-hint {
   animation: fadeIn 1s var(--ease) 2s forwards, bob 2.4s ease-in-out 2s infinite;
 }
-@keyframes fadeIn { to { opacity: 0.85; } }
+@keyframes fadeIn { to { opacity: 1; } }
 @keyframes bob {
   0%, 100% { transform: translate(-50%, 0); }
   50% { transform: translate(-50%, 9px); }
@@ -613,7 +625,7 @@ footer {
 
 @media (prefers-reduced-motion: reduce) {
   .line > span { animation: none; transform: none; }
-  .scroll-hint { animation: none; opacity: 0.6; }
+  .scroll-hint { animation: none; opacity: 1; }
   .reveal-child { opacity: 1; transform: none; transition: none; }
   .tap-hint { animation: none; opacity: 0.8; }
 }
@@ -758,6 +770,7 @@ footer {
   .hero-inner { margin-bottom: 12vh; }
   .hero .meta { margin-top: 1.5rem; font-size: 1.05rem; }
   .hero .from { margin-top: 1rem; font-size: clamp(1.05rem, 4.6vw, 1.4rem); }
+  .scroll-hint { bottom: 1.8rem; font-size: 0.86rem; letter-spacing: 0.24em; }
 
   /* panels: edge-to-edge with comfortable inner padding */
   .panel-section { padding: 4.5rem 0.9rem; }
@@ -803,7 +816,7 @@ footer {
   .hero .tagline { margin-top: 0.8rem; }
   .hero .meta { margin-top: 0.9rem; }
   .hero .from { margin-top: 0.7rem; }
-  .scroll-hint { bottom: 1.2rem; }
+  .scroll-hint { bottom: 1.2rem; font-size: 0.8rem; letter-spacing: 0.2em; }
 
   .invite-face { padding-top: 5vh; }
   .invite-divider { margin: 0.9rem auto 0.6rem; }
