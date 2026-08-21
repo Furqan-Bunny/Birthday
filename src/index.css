@@ -1,0 +1,830 @@
+:root {
+  /* Confetti brights on a soft cream ground — festive but not loud */
+  --pink: #ff5d8f;
+  --pink-soft: #ffa8c3;
+  --gold: #f0ab2e;
+  --gold-light: #f7c86a;
+  --blue: #5ec8f8;
+  --purple: #c792ea;
+  --cream: #fffdfb;
+  --ink: #46323f; /* warm plum — primary body text */
+  --ink-soft: rgba(70, 50, 63, 0.82);
+
+  /* Glass tokens — frosted cream with a pink edge */
+  --glass-tint: rgba(255, 253, 251, 0.46);
+  --glass-tint-solid: rgba(255, 251, 250, 0.92); /* opaque fallback */
+  --glass-edge: rgba(255, 255, 255, 0.78);
+  --glass-edge-lit: rgba(255, 255, 255, 0.95);
+  --glass-pink: rgba(255, 93, 143, 0.3);
+  --glass-shadow: rgba(140, 70, 100, 0.16);
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1); /* expo-out */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  color: var(--ink);
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Soft cream→pink gradient backdrop the transparent 3D canvas floats over. */
+body {
+  background:
+    radial-gradient(120% 70% at 50% 2%, rgba(255, 93, 143, 0.13), rgba(255, 93, 143, 0) 45%),
+    radial-gradient(90% 60% at 85% 100%, rgba(94, 200, 248, 0.1), rgba(94, 200, 248, 0) 50%),
+    linear-gradient(180deg, #ffffff 0%, #fffcfd 60%, #fdf4f8 100%);
+  background-attachment: fixed;
+}
+
+/* Lenis recommended base */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Fredoka', 'Cormorant Garamond', Georgia, serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Fixed full-screen 3D canvas behind everything. pointer-events none so the
+   page scrolls/clicks through to the DOM; the Rig still reads window pointer. */
+.scene-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  /* keep the fixed canvas on its own compositor layer so it doesn't flicker
+     as the page scrolls (esp. on mobile) */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── HERO ─────────────────────────────────────────────── */
+.hero {
+  height: 100vh;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 1.5rem;
+  position: relative;
+}
+
+/* Soft radial scrim so the big name stays legible over the balloons behind it.
+   The block is lifted off centre so the dropped cake has clear room below it. */
+.hero-inner {
+  position: relative;
+  margin-bottom: 18vh;
+}
+.hero-inner::before {
+  content: '';
+  position: absolute;
+  inset: -26% -18%;
+  background: radial-gradient(closest-side, rgba(255, 253, 251, 0.9), rgba(255, 253, 251, 0.55) 55%, rgba(255, 253, 251, 0) 80%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Line-mask reveal: text wipes up from behind a clip edge */
+.line {
+  display: block;
+  overflow: hidden;
+}
+.line > span {
+  display: inline-block;
+  transform: translateY(115%);
+}
+/* the hero text reveals one line at a time, but only AFTER the cake lands
+   (the .go class is added then) */
+.hero.go .line > span {
+  animation: lineUp 1.1s var(--ease) both;
+}
+.hero.go .eyebrow > span { animation-delay: 0.15s; }
+.hero.go .names .line > span { animation-delay: 0.4s; }
+.hero.go .tagline > span { animation-delay: 0.7s; }
+.hero.go .meta > span { animation-delay: 0.9s; }
+.hero.go .from > span { animation-delay: 1.1s; }
+
+@keyframes lineUp {
+  to { transform: translateY(0); }
+}
+
+.hero .eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.5em;
+  font-size: 0.7rem;
+  color: var(--pink);
+  margin-bottom: 1.6rem;
+}
+
+.names {
+  font-size: clamp(3.2rem, 12vw, 9rem);
+  line-height: 0.95;
+  color: var(--ink);
+  text-shadow: 0 4px 30px rgba(255, 93, 143, 0.22);
+}
+.hero .tagline {
+  margin-top: 1.6rem;
+  font-size: clamp(0.9rem, 2.5vw, 1.15rem);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-shadow: 0 1px 10px rgba(255, 253, 251, 0.95);
+}
+.hero .meta {
+  margin-top: 2rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-style: italic;
+  color: var(--gold);
+  text-shadow: 0 1px 10px rgba(255, 253, 251, 0.95);
+}
+/* Who the wish is from. This is the line people actually look for, so it is
+   set at reading size rather than tiny tracked-out caps, and carries a cream
+   halo to stay legible when a balloon drifts behind it. */
+.hero .from {
+  margin-top: 1.3rem;
+  font-family: 'Fredoka', 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: clamp(1.2rem, 3.4vw, 1.85rem);
+  letter-spacing: 0.015em;
+  color: #e8446f;
+  text-shadow: 0 1px 12px rgba(255, 253, 251, 0.98), 0 0 26px rgba(255, 253, 251, 0.9);
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.62rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--pink-soft);
+  opacity: 0;
+}
+.hero.go .scroll-hint {
+  animation: fadeIn 1s var(--ease) 2s forwards, bob 2.4s ease-in-out 2s infinite;
+}
+@keyframes fadeIn { to { opacity: 0.85; } }
+@keyframes bob {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, 9px); }
+}
+
+/* ── GLASS PANEL SECTIONS ─────────────────────────────── */
+.panel-section {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(4rem, 12vh, 8rem) 1.5rem;
+}
+
+/* Opaque fallback first (readable without blur) */
+.glass {
+  background: var(--glass-tint-solid);
+}
+
+/* Real frosted glass where supported */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--glass-tint);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    backdrop-filter: blur(18px) saturate(160%);
+  }
+}
+
+.panel {
+  position: relative;
+  width: min(720px, 100%);
+  border-radius: 22px;
+  padding: clamp(2.4rem, 6vw, 4rem);
+  text-align: center;
+  border: 1px solid var(--glass-edge);
+  border-top-color: var(--glass-edge-lit);
+  border-left-color: rgba(255, 255, 255, 0.36);
+  box-shadow:
+    0 18px 50px var(--glass-shadow),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3),
+    inset 0 -1px 1px rgba(140, 100, 120, 0.06);
+}
+.panel.left { text-align: left; }
+
+/* Lit specular edge (gradient border ring) */
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 42%, var(--glass-pink));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.panel h2 {
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  color: var(--pink);
+}
+.divider {
+  width: 60px;
+  height: 1px;
+  background: var(--gold);
+  margin: 1.3rem auto 2rem;
+  position: relative;
+}
+.panel.left .divider { margin-left: 0; }
+.divider::after {
+  content: '✦';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--gold);
+  font-size: 0.75rem;
+}
+.panel.left .divider::after { left: 0; }
+
+.lead {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.2rem, 3vw, 1.7rem);
+  line-height: 1.7;
+  font-style: italic;
+  color: var(--ink);
+}
+/* ── Quote panel ── */
+.quote-panel { text-align: center; }
+.quote-mark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 5rem;
+  line-height: 0.6;
+  color: var(--pink-soft);
+}
+.quote-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(1.3rem, 3.6vw, 2rem);
+  line-height: 1.6;
+  color: var(--ink);
+  margin-top: 1rem;
+}
+.quote-ref {
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  font-size: 0.7rem;
+  color: var(--gold);
+}
+
+footer {
+  text-align: center;
+  padding: 3rem 1.5rem 4.5rem;
+  font-family: 'Fredoka', 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: clamp(1.05rem, 2.8vw, 1.4rem);
+  letter-spacing: 0.015em;
+  color: #e8446f;
+}
+.footer-signoff {
+  display: block;
+  margin-bottom: 1rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(1.05rem, 2.8vw, 1.35rem);
+  letter-spacing: 0.03em;
+  color: var(--gold);
+}
+
+/* ── Scroll reveals (on inner content only — never on a glass ancestor) ── */
+.reveal-child {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.95s var(--ease), transform 0.95s var(--ease);
+}
+.panel-body.in .reveal-child {
+  opacity: 1;
+  transform: none;
+}
+/* Staggered cascade */
+.panel-body.in .reveal-child:nth-child(1) { transition-delay: 0.05s; }
+.panel-body.in .reveal-child:nth-child(2) { transition-delay: 0.13s; }
+.panel-body.in .reveal-child:nth-child(3) { transition-delay: 0.21s; }
+.panel-body.in .reveal-child:nth-child(4) { transition-delay: 0.29s; }
+.panel-body.in .reveal-child:nth-child(5) { transition-delay: 0.37s; }
+
+/* ════════════════════════════════════════════════════════
+   INTRO — full-screen wrapped gift that opens like double doors
+   ════════════════════════════════════════════════════════ */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  cursor: pointer;
+  perspective: 2400px;
+  overflow: hidden;
+}
+
+.invite {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+/* ── the two full-height wrapping-paper doors ── */
+.door {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  background:
+    radial-gradient(140% 120% at center, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0) 55%),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 93, 143, 0.07) 0 14px,
+      rgba(255, 255, 255, 0) 14px 34px
+    ),
+    linear-gradient(135deg, #ffffff 0%, #fffafc 55%, #fdeff5 100%);
+  box-shadow: inset 0 0 120px rgba(255, 93, 143, 0.12);
+  backface-visibility: hidden;
+  transition: transform 2s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.7s ease 1.25s;
+}
+.door.left {
+  left: 0;
+  transform-origin: left center;
+}
+.door.right {
+  right: 0;
+  transform-origin: right center;
+}
+/* gold double-line frame, open on the centre seam so it reads continuous */
+.door::after {
+  content: '';
+  position: absolute;
+  inset: clamp(18px, 3.5vmin, 40px);
+  border: 1px solid rgba(240, 171, 46, 0.55);
+  box-shadow: inset 0 0 0 4px rgba(247, 200, 106, 0.16);
+}
+/* NB: `inset-right` / `inset-left` are NOT real CSS properties — the correct
+   longhands are `right` / `left`. (The wedding site got this wrong and the
+   rules were silently dropped.) */
+.door.left::after { right: 0; border-right: none; }
+.door.right::after { left: 0; border-left: none; }
+
+/* ── balloon clusters in the corners of the wrapping ── */
+.floral {
+  position: absolute;
+  width: clamp(70px, 14vmin, 140px);
+  height: auto;
+}
+.floral .stem {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.floral .balloon {
+  fill: rgba(255, 93, 143, 0.14);
+  stroke: var(--pink);
+  stroke-width: 2.2;
+}
+.floral .b2 { stroke: var(--blue); fill: rgba(94, 200, 248, 0.14); }
+.floral .b3 { stroke: var(--gold); fill: rgba(240, 171, 46, 0.14); }
+.floral.tl { top: clamp(8px, 2vmin, 28px); left: clamp(8px, 2vmin, 28px); }
+.floral.bl { bottom: clamp(8px, 2vmin, 28px); left: clamp(8px, 2vmin, 28px); transform: scaleY(-1); }
+.floral.tr { top: clamp(8px, 2vmin, 28px); right: clamp(8px, 2vmin, 28px); transform: scaleX(-1); }
+.floral.br { bottom: clamp(8px, 2vmin, 28px); right: clamp(8px, 2vmin, 28px); transform: scale(-1, -1); }
+
+.intro.is-open .door.left { transform: rotateY(-115deg); opacity: 0; }
+.intro.is-open .door.right { transform: rotateY(115deg); opacity: 0; }
+
+/* ── centred name + prompt (fade out on untie) ── */
+.invite-face {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: clamp(9vh, 14vh, 18vh);
+  text-align: center;
+  color: var(--ink);
+  transition: opacity 0.7s var(--ease), transform 0.9s var(--ease);
+  pointer-events: none;
+}
+.intro.is-untie .invite-face,
+.intro.is-open .invite-face { opacity: 0; transform: scale(1.04); }
+
+.face-content { padding: 0 1.5rem; }
+.invite-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.42em;
+  font-size: clamp(0.6rem, 1.6vw, 0.78rem);
+  color: var(--ink-soft);
+}
+.invite-mono {
+  margin: 0 0 1rem;
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  line-height: 1;
+}
+.invite-names {
+  font-family: 'Fredoka', serif;
+  font-weight: 600;
+  font-size: clamp(2.8rem, 11vw, 7rem);
+  line-height: 1;
+  color: var(--ink);
+  margin-top: 0.6rem;
+}
+.invite-divider {
+  width: clamp(60px, 12vw, 120px);
+  height: 1px;
+  background: var(--gold);
+  margin: 1.6rem auto 1rem;
+  position: relative;
+}
+.invite-divider::after {
+  content: '✦';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--gold);
+  font-size: 0.7rem;
+}
+.invite-date {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(1.1rem, 3vw, 1.6rem);
+  color: var(--ink-soft);
+}
+.invite-from {
+  margin-top: 1.3rem;
+  font-family: 'Fredoka', 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: clamp(1rem, 2.8vw, 1.45rem);
+  letter-spacing: 0.015em;
+  color: #e8446f;
+}
+.tap-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(5vh, 7vh, 9vh);
+  z-index: 5;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-family: 'Fredoka', 'Montserrat', sans-serif;
+  font-weight: 500;
+  font-size: clamp(0.95rem, 2.6vw, 1.25rem);
+  color: #e8446f;
+  animation: tapPulse 1.9s ease-in-out infinite;
+}
+.intro.is-untie .tap-hint,
+.intro.is-open .tap-hint { opacity: 0; animation: none; transition: opacity 0.4s ease; }
+@keyframes tapPulse {
+  0%, 100% { opacity: 0.62; letter-spacing: 0.22em; }
+  50% { opacity: 1; letter-spacing: 0.3em; }
+}
+
+/* ── horizontal ribbon band (low, so it never crosses the text) + bow ── */
+.ribbon {
+  position: absolute;
+  left: 0;
+  top: 70%;
+  transform: translateY(-50%);
+  width: 100%;
+  height: clamp(44px, 6.5vw, 62px);
+  z-index: 6;
+  pointer-events: none;
+}
+.ribbon-strip {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 52%;
+  background:
+    linear-gradient(180deg, #c93a68 0%, #ff6f9c 16%, #ffa8c3 50%, #ff6f9c 84%, #c23261 100%);
+  box-shadow: 0 6px 22px rgba(160, 60, 100, 0.22);
+  transition: transform 0.85s var(--ease) 0.35s, opacity 0.6s ease 0.45s;
+}
+.ribbon-strip.left { left: 0; }
+.ribbon-strip.right { right: 0; }
+.intro.is-untie .ribbon-strip.left,
+.intro.is-open .ribbon-strip.left { transform: translateX(-130%); opacity: 0; }
+.intro.is-untie .ribbon-strip.right,
+.intro.is-open .ribbon-strip.right { transform: translateX(130%); opacity: 0; }
+
+.bow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(120px, 22vw, 180px);
+  height: clamp(80px, 15vw, 120px);
+  transform: translate(-50%, -50%);
+}
+/* loops */
+.bow .loop {
+  position: absolute;
+  top: 50%;
+  width: 42%;
+  height: 78%;
+  background: linear-gradient(135deg, #ffa8c3, #ff5d8f 70%, #c23261);
+  box-shadow: inset 0 0 10px rgba(150, 40, 80, 0.4);
+  transition: transform 0.7s var(--ease), opacity 0.55s ease 0.08s;
+}
+.bow .loop.l {
+  right: 50%;
+  transform: translateY(-50%) rotate(-20deg);
+  transform-origin: right center;
+  border-radius: 70% 28% 70% 28%;
+}
+.bow .loop.r {
+  left: 50%;
+  transform: translateY(-50%) rotate(20deg);
+  transform-origin: left center;
+  border-radius: 28% 70% 28% 70%;
+}
+.intro.is-untie .loop.l,
+.intro.is-open .loop.l { transform: translate(-40%, -50%) rotate(-95deg) scale(0.35); opacity: 0; }
+.intro.is-untie .loop.r,
+.intro.is-open .loop.r { transform: translate(40%, -50%) rotate(95deg) scale(0.35); opacity: 0; }
+/* tails */
+.bow .tail {
+  position: absolute;
+  top: 54%;
+  width: 14%;
+  height: 70%;
+  background: linear-gradient(180deg, #ff85aa, #b82f5c);
+  transition: transform 0.8s var(--ease) 0.06s, opacity 0.55s ease 0.18s;
+}
+.bow .tail.l { left: 40%; transform: rotate(12deg); transform-origin: top center; }
+.bow .tail.r { left: 60%; transform: rotate(-12deg); transform-origin: top center; }
+.intro.is-untie .tail.l,
+.intro.is-open .tail.l { transform: rotate(46deg) translateY(60%); opacity: 0; }
+.intro.is-untie .tail.r,
+.intro.is-open .tail.r { transform: rotate(-46deg) translateY(60%); opacity: 0; }
+/* knot */
+.bow .knot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16%;
+  height: 46%;
+  transform: translate(-50%, -50%);
+  border-radius: 4px;
+  background: linear-gradient(135deg, #ff9cba, #a82a54);
+  box-shadow: inset 0 0 6px rgba(120, 30, 60, 0.5);
+  z-index: 2;
+  transition: transform 0.6s var(--ease), opacity 0.45s ease 0.12s;
+}
+.intro.is-untie .knot,
+.intro.is-open .knot { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .line > span { animation: none; transform: none; }
+  .scroll-hint { animation: none; opacity: 0.6; }
+  .reveal-child { opacity: 1; transform: none; transition: none; }
+  .tap-hint { animation: none; opacity: 0.8; }
+}
+
+/* ════════════════════════════════════════════════════════
+   THE WISH — sketches & the list
+   ════════════════════════════════════════════════════════ */
+/* The "for the year ahead" list */
+.menu {
+  list-style: none;
+  margin: 1.6rem auto 0;
+  max-width: 480px;
+}
+.menu li {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.05rem, 2.6vw, 1.35rem);
+  color: var(--ink);
+  padding: 0.7rem 0;
+  border-bottom: 1px solid rgba(255, 93, 143, 0.25);
+}
+.menu li:last-child { border-bottom: none; }
+
+/* ── Sketch line-art (cake · party · gift) ── */
+.sketch {
+  display: block;
+  height: auto;
+  margin: 0 auto 1.6rem;
+  overflow: visible;
+}
+.sketch.cake { width: min(360px, 88%); }
+.sketch.lantern { width: min(320px, 84%); }
+.sketch.stars { width: min(320px, 84%); }
+
+.sketch .ln {
+  fill: none;
+  stroke: var(--pink);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 700;
+  stroke-dashoffset: 700;
+  filter: drop-shadow(0 0 5px rgba(255, 93, 143, 0.35));
+}
+.sketch .soft { opacity: 0.5; }
+.panel-body.in .sketch .ln { animation: sketchDraw 1.8s var(--ease) 0.2s forwards; }
+@keyframes sketchDraw { to { stroke-dashoffset: 0; } }
+
+/* ── cake: candles draw last, then the flames light and flicker ── */
+.cake .drip { stroke: var(--gold); }
+.cake .candles .ln { stroke: var(--blue); }
+.cake .flames .flame {
+  stroke: var(--gold);
+  fill: rgba(240, 171, 46, 0.35);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+.panel-body.in .cake .flames .flame {
+  animation: flameOn 0.5s var(--ease) 2.1s forwards, flicker 0.6s ease-in-out 2.6s infinite alternate;
+}
+.panel-body.in .cake .flames .flame:nth-child(2) { animation-delay: 2.25s, 2.7s; }
+.panel-body.in .cake .flames .flame:nth-child(3) { animation-delay: 2.4s, 2.55s; }
+@keyframes flameOn {
+  from { opacity: 0; transform: scaleY(0.2); }
+  to { opacity: 1; transform: scaleY(1); }
+}
+@keyframes flicker {
+  from { transform: scale(0.92, 0.94) translateX(-0.5px); filter: drop-shadow(0 0 4px rgba(240, 171, 46, 0.6)); }
+  to { transform: scale(1.06, 1.1) translateX(0.5px); filter: drop-shadow(0 0 10px rgba(240, 171, 46, 0.95)); }
+}
+
+/* ── lantern: it is drawn, then it lifts off and the flame breathes ── */
+.lantern .glow { stroke: var(--gold); fill: rgba(240, 171, 46, 0.35); }
+.lantern .rib { stroke: var(--gold); }
+.lantern .lant { transform-box: fill-box; transform-origin: center bottom; }
+.panel-body.in .lantern .lant-main { animation: liftMain 5.5s ease-in-out 2.2s infinite alternate; }
+.panel-body.in .lantern .lant-s1 { animation: liftSmall 6.4s ease-in-out 2.5s infinite alternate; }
+.panel-body.in .lantern .lant-s2 { animation: liftSmall 5.9s ease-in-out 2.9s infinite alternate; }
+@keyframes liftMain {
+  from { transform: translateY(4px) rotate(-1.5deg); }
+  to { transform: translateY(-14px) rotate(1.5deg); }
+}
+@keyframes liftSmall {
+  from { transform: translateY(6px) rotate(2deg); }
+  to { transform: translateY(-18px) rotate(-2deg); }
+}
+.lantern .glow { transform-box: fill-box; transform-origin: center bottom; }
+.panel-body.in .lantern .glow {
+  animation: sketchDraw 1.8s var(--ease) 0.2s forwards, flicker 0.7s ease-in-out 2.2s infinite alternate;
+}
+
+/* ── stars: the big one turns, the small ones twinkle ── */
+.stars .star-big { stroke: var(--gold); fill: rgba(240, 171, 46, 0.12); }
+.stars .star-sm { stroke: var(--pink); }
+.stars .pops .pop { stroke: var(--blue); }
+.stars .star-big, .stars .star-sm { transform-box: fill-box; transform-origin: center; }
+.panel-body.in .stars .star-big {
+  animation: sketchDraw 1.8s var(--ease) 0.2s forwards, starTurn 9s linear 2s infinite;
+}
+@keyframes starTurn {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.panel-body.in .stars .s1 {
+  animation: sketchDraw 1.8s var(--ease) 0.2s forwards, twinkle 1.9s ease-in-out 2.2s infinite alternate;
+}
+.panel-body.in .stars .s2 {
+  animation: sketchDraw 1.8s var(--ease) 0.2s forwards, twinkle 2.3s ease-in-out 2.6s infinite alternate;
+}
+@keyframes twinkle {
+  from { opacity: 0.22; transform: scale(0.86) rotate(-8deg); }
+  to { opacity: 0.9; transform: scale(1.08) rotate(8deg); }
+}
+.panel-body.in .stars .pops .pop,
+.panel-body.in .lantern .pops .pop {
+  animation: sketchDraw 1.8s var(--ease) 0.2s forwards, popTwinkle 1.4s ease-in-out 2.8s infinite alternate;
+}
+@keyframes popTwinkle {
+  from { opacity: 0.2; }
+  to { opacity: 0.85; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sketch .ln { stroke-dashoffset: 0; animation: none; }
+  .cake .flames .flame { opacity: 1; animation: none; }
+  .lantern .lant, .lantern .glow { animation: none; }
+  .stars .star-big, .stars .star-sm { animation: none; opacity: 1; }
+  .stars .pops .pop, .lantern .pops .pop { animation: none; }
+}
+
+/* ════════════════════════════════════════════════════════
+   MOBILE — phones & small screens
+   ════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* tighten wide letter-spacing so uppercase lines don't overflow */
+  .hero .eyebrow { letter-spacing: 0.25em; font-size: 0.6rem; }
+  .hero .tagline { letter-spacing: 0.16em; font-size: 0.82rem; }
+  .invite-eyebrow { letter-spacing: 0.22em; font-size: 0.62rem; }
+
+  /* the hero block sits less far off centre — a phone screen has less room
+     between the text and the cake below it than a desktop one does */
+  .hero-inner { margin-bottom: 12vh; }
+  .hero .meta { margin-top: 1.5rem; font-size: 1.05rem; }
+  .hero .from { margin-top: 1rem; font-size: clamp(1.05rem, 4.6vw, 1.4rem); }
+
+  /* panels: edge-to-edge with comfortable inner padding */
+  .panel-section { padding: 4.5rem 0.9rem; }
+  .panel { border-radius: 18px; padding: 2rem 1.25rem; }
+  .panel h2 { font-size: clamp(1.8rem, 8.5vw, 2.6rem); }
+  .lead { font-size: clamp(1.05rem, 4.4vw, 1.3rem); line-height: 1.6; }
+  .quote-text { font-size: clamp(1.1rem, 5vw, 1.5rem); }
+  .menu li { padding: 0.62rem 0; font-size: clamp(0.98rem, 4.2vw, 1.2rem); }
+
+  /* sketch art a touch smaller */
+  .sketch.cake { width: min(290px, 92%); }
+  .sketch.lantern { width: min(255px, 88%); }
+  .sketch.stars { width: min(255px, 88%); }
+
+  /* intro card */
+  .invite-names { font-size: clamp(2.2rem, 12vw, 3.4rem); }
+  .invite-face { padding-top: 11vh; }
+  .invite-from { font-size: clamp(0.98rem, 4.2vw, 1.25rem); margin-top: 1.1rem; }
+  .floral { width: clamp(54px, 18vw, 84px); }
+  .ribbon { top: 72%; }
+  .tap-hint { bottom: 5vh; font-size: clamp(0.92rem, 4vw, 1.1rem); letter-spacing: 0.16em; }
+
+  footer { padding: 2.5rem 1rem 3.5rem; font-size: clamp(1rem, 4.2vw, 1.2rem); }
+  .footer-signoff { font-size: clamp(1rem, 4vw, 1.2rem); margin-bottom: 0.8rem; }
+}
+
+/* very small / short screens */
+@media (max-width: 380px) {
+  .names { font-size: clamp(2.6rem, 16vw, 4rem); }
+  .invite-names { font-size: 2rem; }
+  .hero .from { font-size: 1rem; }
+  .invite-from { font-size: 0.92rem; }
+  .tap-hint { font-size: 0.88rem; letter-spacing: 0.12em; }
+  footer { font-size: 0.98rem; }
+  .panel { padding: 1.7rem 1.05rem; }
+}
+
+/* Phones held sideways: very little height, so pull all the vertical
+   breathing room in and stop forcing every section to a full screen. */
+@media (max-height: 540px) and (orientation: landscape) {
+  .hero-inner { margin-bottom: 5vh; }
+  .hero .eyebrow { margin-bottom: 0.8rem; }
+  .hero .tagline { margin-top: 0.8rem; }
+  .hero .meta { margin-top: 0.9rem; }
+  .hero .from { margin-top: 0.7rem; }
+  .scroll-hint { bottom: 1.2rem; }
+
+  .invite-face { padding-top: 5vh; }
+  .invite-divider { margin: 0.9rem auto 0.6rem; }
+  .invite-from { margin-top: 0.7rem; }
+  .ribbon { top: 78%; }
+  .tap-hint { bottom: 3vh; }
+
+  .panel-section { min-height: auto; padding: 3rem 1rem; }
+  .sketch { margin-bottom: 1rem; }
+  .sketch.cake, .sketch.lantern, .sketch.stars { width: min(200px, 46%); }
+}
+
+/* On mobile, backdrop-filter over the animating 3D canvas flickers badly —
+   use a solid frosted panel instead (no per-frame blur re-sampling). */
+@media (max-width: 768px) {
+  .glass {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: rgba(255, 252, 253, 0.95);
+  }
+  .panel {
+    box-shadow: 0 14px 40px rgba(140, 70, 100, 0.18);
+  }
+}
